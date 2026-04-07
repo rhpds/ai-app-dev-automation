@@ -1,0 +1,20 @@
+# Default values for bootstrap.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+user:
+  count: 2
+  prefix: user
+
+deployer:
+  domain: apps.cluster-guid.sandbox.opentlc.com
+  apiUrl: https://api.cluster-guid.sandbox.opentlc.com:6443
+
+# This is the user-scoped git repo, where per seat user resources are stored.
+# Set to empty to NOT create workspaces.
+# workspace: ""
+workspace:
+  git:
+    url: https://github.com/rhpds/ai-app-dev-automation.git
+    revision: main
+    path: bootstrap-tenant
