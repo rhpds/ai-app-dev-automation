@@ -3,7 +3,7 @@ apiVersion: argoproj.io/v1beta1
 kind: ArgoCD
 metadata:
   name: argocd
-  namespace: {{ .Values.username }}-demo
+  namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"
 spec:
   sso:
     dex:
