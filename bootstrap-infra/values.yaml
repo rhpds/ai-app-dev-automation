@@ -10,6 +10,14 @@ deployer:
   domain: apps.cluster-guid.sandbox.opentlc.com
   apiUrl: https://api.cluster-guid.sandbox.opentlc.com:6443
 
+
+devhub:
+  namespace: rhdh
+  channel: fast-1.8
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+
+
 # This is the user-scoped git repo, where per seat user resources are stored.
 # Set to empty to NOT create workspaces.
 # workspace: ""
