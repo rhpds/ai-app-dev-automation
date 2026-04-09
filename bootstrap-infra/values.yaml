@@ -21,6 +21,7 @@ devhub:
     clientId: backstage
     clientSecret: backstage-client-secret-demo
 
+jobCliImage: registry.redhat.io/openshift4/ose-cli:latest
 
 # This is the user-scoped git repo, where per seat user resources are stored.
 # Set to empty to NOT create workspaces.
