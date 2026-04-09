@@ -16,6 +16,10 @@ devhub:
   channel: fast-1.8
   source: redhat-operators
   sourceNamespace: openshift-marketplace
+  keycloakRealm: sso
+  oauth:
+    clientId: backstage
+    clientSecret: backstage-client-secret-demo
 
 
 # This is the user-scoped git repo, where per seat user resources are stored.
