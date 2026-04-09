@@ -41,16 +41,3 @@ data:
               subject: api-access
       csp:
         upgrade-insecure-requests: false
-
-    catalog:
-      providers:
-        keycloakOrg:
-          default:
-            baseUrl: https://sso.{{ .Values.deployer.domain }}
-            realm: {{ .Values.devhub.keycloakRealm }}
-            clientId: ${OAUTH_CLIENT_ID}
-            clientSecret: ${OAUTH_CLIENT_SECRET}
-            schedule:
-              frequency: { minutes: 2 }
-              timeout: { minutes: 1 }
-              initialDelay: { seconds: 15 }
