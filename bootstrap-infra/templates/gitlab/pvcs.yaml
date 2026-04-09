@@ -4,7 +4,7 @@ metadata:
   name: gitlab-persistent-storage
   namespace: {{ .Values.gitlab.namespace }}
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   accessModes:
     - ReadWriteOnce
@@ -18,7 +18,7 @@ metadata:
   name: gitlab-postgresql
   namespace: {{ .Values.gitlab.namespace }}
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   accessModes:
     - ReadWriteOnce
@@ -32,7 +32,7 @@ metadata:
   name: gitlab-redis
   namespace: {{ .Values.gitlab.namespace }}
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   accessModes:
     - ReadWriteOnce
