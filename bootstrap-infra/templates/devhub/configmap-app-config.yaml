@@ -49,6 +49,28 @@ data:
           host: gitlab-{{ .Values.gitlab.namespace }}.{{ .Values.deployer.domain }}
           token: ${GITLAB_TOKEN}
 
+    kubernetes:
+      serviceLocatorMethod:
+        type: multiTenant
+      clusterLocatorMethods:
+        - clusters:
+            - name: dev-cluster
+              url: {{ .Values.deployer.apiUrl }}
+              authProvider: serviceAccount
+              skipTLSVerify: true
+              serviceAccountToken: ${KUBERNETES_SA_TOKEN}
+          type: config
+      customResources:
+        - group: tekton.dev
+          apiVersion: v1beta1
+          plural: pipelineruns
+        - group: tekton.dev
+          apiVersion: v1beta1
+          plural: taskruns
+        - group: route.openshift.io
+          apiVersion: v1
+          plural: routes
+
     catalog:
       rules:
         - allow: [Component, System, API, Resource, Location, Template, Domain]

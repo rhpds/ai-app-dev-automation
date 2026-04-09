@@ -20,6 +20,7 @@ spec:
         - name: backend-secret
         - name: oauth-client
         - name: gitlab-token
+        - name: kubernetes-sa-token
     replicas: 1
     route:
       enabled: true
