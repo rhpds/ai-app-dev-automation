@@ -51,31 +51,67 @@ spec:
               EXISTING=$(curl -sk "${KC_URL}/admin/realms/${KC_REALM}/clients?clientId=${CLIENT_ID}" \
                 -H "Authorization: Bearer $TOKEN" | python3 -c "import sys,json; r=json.load(sys.stdin); print(len(r))")
 
-              if [ "$EXISTING" -gt 0 ]; then
-                echo "Client '${CLIENT_ID}' already exists, skipping."
-                exit 0
-              fi
-
-              HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" -X POST \
-                "${KC_URL}/admin/realms/${KC_REALM}/clients" \
-                -H "Authorization: Bearer $TOKEN" \
-                -H "Content-Type: application/json" \
-                -d "{
-                  \"clientId\": \"${CLIENT_ID}\",
-                  \"enabled\": true,
-                  \"protocol\": \"openid-connect\",
-                  \"publicClient\": false,
-                  \"clientAuthenticatorType\": \"client-secret\",
-                  \"secret\": \"${CLIENT_SECRET}\",
-                  \"standardFlowEnabled\": true,
-                  \"directAccessGrantsEnabled\": true,
-                  \"serviceAccountsEnabled\": true,
-                  \"redirectUris\": [\"*\"]
-                }")
-
-              if [ "$HTTP_CODE" = "201" ]; then
+              if [ "$EXISTING" -eq 0 ]; then
+                echo "Creating client '${CLIENT_ID}'..."
+                HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" -X POST \
+                  "${KC_URL}/admin/realms/${KC_REALM}/clients" \
+                  -H "Authorization: Bearer $TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{
+                    \"clientId\": \"${CLIENT_ID}\",
+                    \"enabled\": true,
+                    \"protocol\": \"openid-connect\",
+                    \"publicClient\": false,
+                    \"clientAuthenticatorType\": \"client-secret\",
+                    \"secret\": \"${CLIENT_SECRET}\",
+                    \"standardFlowEnabled\": true,
+                    \"directAccessGrantsEnabled\": true,
+                    \"serviceAccountsEnabled\": true,
+                    \"redirectUris\": [\"*\"]
+                  }")
+                if [ "$HTTP_CODE" != "201" ]; then
+                  echo "Failed to create client. HTTP status: ${HTTP_CODE}"
+                  exit 1
+                fi
                 echo "Client '${CLIENT_ID}' created successfully."
               else
-                echo "Failed to create client. HTTP status: ${HTTP_CODE}"
-                exit 1
+                echo "Client '${CLIENT_ID}' already exists, skipping creation."
+              fi
+
+              # Assign realm-management roles to the service account
+              # so the keycloak org provider can read users and groups
+              CLIENT_UUID=$(curl -sk "${KC_URL}/admin/realms/${KC_REALM}/clients?clientId=${CLIENT_ID}" \
+                -H "Authorization: Bearer $TOKEN" | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['id'])")
+
+              SA_USER=$(curl -sk "${KC_URL}/admin/realms/${KC_REALM}/clients/${CLIENT_UUID}/service-account-user" \
+                -H "Authorization: Bearer $TOKEN" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+
+              REALM_MGMT_UUID=$(curl -sk "${KC_URL}/admin/realms/${KC_REALM}/clients?clientId=realm-management" \
+                -H "Authorization: Bearer $TOKEN" | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['id'])")
+
+              AVAILABLE_ROLES=$(curl -sk "${KC_URL}/admin/realms/${KC_REALM}/users/${SA_USER}/role-mappings/clients/${REALM_MGMT_UUID}/available" \
+                -H "Authorization: Bearer $TOKEN")
+
+              ROLES_TO_ASSIGN=$(echo "$AVAILABLE_ROLES" | python3 -c "
+              import sys,json
+              roles = json.load(sys.stdin)
+              needed = ['view-users', 'query-users', 'view-realm', 'query-groups']
+              result = [r for r in roles if r['name'] in needed]
+              print(json.dumps(result))
+              ")
+
+              if [ "$ROLES_TO_ASSIGN" = "[]" ]; then
+                echo "Service account roles already assigned."
+              else
+                HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" -X POST \
+                  "${KC_URL}/admin/realms/${KC_REALM}/users/${SA_USER}/role-mappings/clients/${REALM_MGMT_UUID}" \
+                  -H "Authorization: Bearer $TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "$ROLES_TO_ASSIGN")
+                if [ "$HTTP_CODE" = "204" ]; then
+                  echo "Service account roles assigned successfully."
+                else
+                  echo "Failed to assign roles. HTTP status: ${HTTP_CODE}"
+                  exit 1
+                fi
               fi
