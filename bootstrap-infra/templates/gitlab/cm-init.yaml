@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-init-gitlab
+  namespace: {{ .Values.gitlab.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  playbook.yaml: |
+    ---
+    - name: Configure GitLab
+      hosts: localhost
+      vars:
+        gitlab_namespace: {{ .Values.gitlab.namespace }}
+        gitlab_host: gitlab-{{ .Values.gitlab.namespace }}.{{ .Values.deployer.domain }}
+      tasks:
+        - name: Wait for GitLab pod to be ready
+          kubernetes.core.k8s_info:
+            kind: Pod
+            namespace: '{{ "{{" }} gitlab_namespace {{ "}}" }}'
+            label_selectors:
+              - app=gitlab
+          register: r_gitlab_pod
+          retries: 120
+          delay: 10
+          until:
+            - r_gitlab_pod.resources is defined
+            - r_gitlab_pod.resources | length > 0
+            - r_gitlab_pod.resources[0].status is defined
+            - r_gitlab_pod.resources[0].status.phase == 'Running'
+            - r_gitlab_pod.resources[0].status.containerStatuses is defined
+            - r_gitlab_pod.resources[0].status.containerStatuses | selectattr('ready', 'equalto', true) | list | length == r_gitlab_pod.resources[0].status.containerStatuses | length
+
+        - name: Wait for GitLab API to be available
+          ansible.builtin.uri:
+            url: https://{{ "{{" }} gitlab_host {{ "}}" }}/api/v4/projects
+            method: GET
+            validate_certs: false
+          register: r_liveness
+          retries: 60
+          delay: 10
+          until: r_liveness.status == 200
+
+        - name: Generate root user personal token
+          shell: |
+            POD=$(oc get pod -l app=gitlab -n {{ "{{" }} gitlab_namespace {{ "}}" }} --no-headers | awk '{print $1}')
+            oc exec $POD -n {{ "{{" }} gitlab_namespace {{ "}}" }} -- /bin/sh -c /scripts/create-root-pat.sh
+            ROOT_PAT=$(oc exec $POD -n {{ "{{" }} gitlab_namespace {{ "}}" }} -- /bin/sh -c "cat /tmp/root.pat")
+            oc delete secret root-user-personal-token -n {{ "{{" }} gitlab_namespace {{ "}}" }} --ignore-not-found
+            oc create secret generic root-user-personal-token --from-literal=token=$ROOT_PAT -n {{ "{{" }} gitlab_namespace {{ "}}" }}
+
+        - name: Retrieve root token
+          kubernetes.core.k8s_info:
+            api_version: v1
+            kind: Secret
+            name: root-user-personal-token
+            namespace: '{{ "{{" }} gitlab_namespace {{ "}}" }}'
+          register: r_root_token
+          failed_when: r_root_token.resources[0].data.token | length == 0
+
+        - name: Decode root token
+          set_fact:
+            root_token: '{{ "{{" }} r_root_token.resources[0].data.token | b64decode {{ "}}" }}'
+
+        - name: Update application settings
+          ansible.builtin.uri:
+            url: https://{{ "{{" }} gitlab_host {{ "}}" }}/api/v4/application/settings
+            method: PUT
+            body_format: form-urlencoded
+            body:
+              import_sources: "git,github,gitea"
+              version_check_enabled: "false"
+              allow_local_requests_from_web_hooks_and_services: "true"
+            headers:
+              PRIVATE-TOKEN: '{{ "{{" }} root_token {{ "}}" }}'
+            validate_certs: false
+            status_code: 200
+          retries: 10
+          delay: 5
+          register: r_application_settings
+          until: r_application_settings.status == 200
+
+        - name: Store root token in RHDH namespace
+          shell: |
+            oc delete secret gitlab-token -n {{ .Values.devhub.namespace }} --ignore-not-found
+            oc create secret generic gitlab-token --from-literal=GITLAB_TOKEN={{ "{{" }} root_token {{ "}}" }} -n {{ .Values.devhub.namespace }}
