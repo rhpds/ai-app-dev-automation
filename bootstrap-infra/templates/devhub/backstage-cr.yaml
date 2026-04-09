@@ -19,6 +19,7 @@ spec:
       secrets:
         - name: backend-secret
         - name: oauth-client
+        - name: gitlab-token
     replicas: 1
     route:
       enabled: true

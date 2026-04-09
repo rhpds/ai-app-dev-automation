@@ -29,3 +29,21 @@ data:
                       minutes: 1
                     initialDelay:
                       seconds: 15
+      - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-gitlab-dynamic
+        disabled: false
+      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-dynamic
+        disabled: false
+        pluginConfig:
+          catalog:
+            providers:
+              gitlab:
+                gitlab:
+                  host: gitlab-{{ .Values.gitlab.namespace }}.{{ .Values.deployer.domain }}
+                  branch: main
+                  fallbackBranch: main
+                  entityFilename: catalog-info.yaml
+                  schedule:
+                    frequency:
+                      minutes: 5
+                    timeout:
+                      minutes: 3
