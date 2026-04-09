@@ -22,6 +22,9 @@ data:
                   clientId: ${OAUTH_CLIENT_ID}
                   clientSecret: ${OAUTH_CLIENT_SECRET}
                   schedule:
-                    frequency: { minutes: 2 }
-                    timeout: { minutes: 1 }
-                    initialDelay: { seconds: 15 }
+                    frequency:
+                      minutes: 2
+                    timeout:
+                      minutes: 1
+                    initialDelay:
+                      seconds: 15
