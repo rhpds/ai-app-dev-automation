@@ -19,6 +19,7 @@ data:
                 default:
                   baseUrl: https://sso.{{ .Values.deployer.domain }}
                   realm: {{ .Values.devhub.keycloakRealm }}
+                  loginRealm: {{ .Values.devhub.keycloakRealm }}
                   clientId: ${OAUTH_CLIENT_ID}
                   clientSecret: ${OAUTH_CLIENT_SECRET}
                   schedule:
