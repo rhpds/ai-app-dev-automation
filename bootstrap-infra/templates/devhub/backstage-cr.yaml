@@ -1,0 +1,20 @@
+apiVersion: rhdh.redhat.com/v1alpha4
+kind: Backstage
+metadata:
+  name: developer-hub
+  namespace: {{ .Values.devhub.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  application:
+    extraEnvs:
+      envs:
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: "0"
+      secrets:
+        - name: backend-secret
+    replicas: 1
+    route:
+      enabled: true
+  database:
+    enableLocalDb: true
