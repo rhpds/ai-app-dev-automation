@@ -13,6 +13,7 @@ data:
       vars:
         gitlab_namespace: {{ .Values.gitlab.namespace }}
         gitlab_host: gitlab-{{ .Values.gitlab.namespace }}.{{ .Values.deployer.domain }}
+        root_password: {{ .Values.gitlab.rootPassword }}
       tasks:
         - name: Wait for GitLab pod to be ready
           kubernetes.core.k8s_info:
@@ -41,6 +42,25 @@ data:
           delay: 10
           until: r_liveness.status == 200
 
+        - name: Seed root user if not present
+          shell: |
+            POD=$(oc get pod -l app=gitlab -n {{ "{{" }} gitlab_namespace {{ "}}" }} --no-headers | awk '{print $1}')
+            oc exec $POD -n {{ "{{" }} gitlab_namespace {{ "}}" }} -- /bin/sh -c 'echo "
+              u = User.find_by(username: \"root\")
+              unless u
+                u = User.new(username: \"root\", email: \"root@rhdemo.com\", name: \"Administrator\", password: \"{{ "{{" }} root_password {{ "}}" }}\", password_confirmation: \"{{ "{{" }} root_password {{ "}}" }}\", admin: true)
+                u.skip_confirmation!
+                u.save!
+                puts \"ROOT_CREATED\"
+              else
+                puts \"ROOT_EXISTS\"
+              end
+            " | timeout 120 ./bin/rails console'
+          register: r_seed_root
+          retries: 3
+          delay: 30
+          until: r_seed_root.rc == 0
+
         - name: Generate root user personal token
           shell: |
             POD=$(oc get pod -l app=gitlab -n {{ "{{" }} gitlab_namespace {{ "}}" }} --no-headers | awk '{print $1}')
@@ -48,6 +68,10 @@ data:
             ROOT_PAT=$(oc exec $POD -n {{ "{{" }} gitlab_namespace {{ "}}" }} -- /bin/sh -c "cat /tmp/root.pat")
             oc delete secret root-user-personal-token -n {{ "{{" }} gitlab_namespace {{ "}}" }} --ignore-not-found
             oc create secret generic root-user-personal-token --from-literal=token=$ROOT_PAT -n {{ "{{" }} gitlab_namespace {{ "}}" }}
+          retries: 3
+          delay: 30
+          register: r_create_pat
+          until: r_create_pat.rc == 0
 
         - name: Retrieve root token
           kubernetes.core.k8s_info:
