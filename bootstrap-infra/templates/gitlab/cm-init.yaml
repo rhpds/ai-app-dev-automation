@@ -50,16 +50,17 @@ data:
               unless u
                 u = User.new(username: \"root\", email: \"root@rhdemo.com\", name: \"Administrator\", password: \"{{ "{{" }} root_password {{ "}}" }}\", password_confirmation: \"{{ "{{" }} root_password {{ "}}" }}\", admin: true)
                 u.skip_confirmation!
-                u.save!
-                puts \"ROOT_CREATED\"
+                u.save!(validate: false)
+                n = u.create_namespace!(path: \"root\", name: \"Root\", owner: u)
+                puts \"ROOT_CREATED id=#{u.id}\"
               else
-                puts \"ROOT_EXISTS\"
+                puts \"ROOT_EXISTS id=#{u.id}\"
               end
             " | timeout 120 ./bin/rails console'
           register: r_seed_root
           retries: 3
           delay: 30
-          until: r_seed_root.rc == 0
+          until: r_seed_root.rc == 0 and 'ROOT_CREATED' in r_seed_root.stdout or 'ROOT_EXISTS' in r_seed_root.stdout
 
         - name: Generate root user personal token
           shell: |
