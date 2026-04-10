@@ -200,6 +200,16 @@ data:
             - key: cluster_subdomain
               value: '{{ "{{" }} cluster_subdomain {{ "}}" }}'
 
+        - name: Git config email
+          ansible.builtin.command:
+            chdir: /tmp/ai-app-dev-automation
+            cmd: git config user.email "root@rhdemo.com"
+
+        - name: Git config name
+          ansible.builtin.command:
+            chdir: /tmp/ai-app-dev-automation
+            cmd: git config user.name "Administrator"
+
         - name: Add new files to the repository
           ansible.builtin.command:
             chdir: /tmp/ai-app-dev-automation
