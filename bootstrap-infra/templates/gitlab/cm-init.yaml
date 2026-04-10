@@ -177,7 +177,7 @@ data:
             force: true
             repo: '{{ "{{" }} _git_repo_url {{ "}}" }}'
             dest: /tmp/ai-app-dev-automation
-            version: main
+            version: jm-12423
           environment:
             GIT_SSL_NO_VERIFY: "true"
           register: r_git_clone
