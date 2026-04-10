@@ -1,0 +1,69 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: ${{ values.component_id }}-build
+  labels:
+    backstage.io/kubernetes-id: ${{ values.component_id }}
+spec:
+  params:
+    - name: git-url
+      type: string
+      default: https://${{ values.gitlab_host }}/${{ values.owner }}/${{ values.component_id }}.git
+    - name: git-revision
+      type: string
+      default: main
+    - name: image
+      type: string
+      default: image-registry.openshift-image-registry.svc:5000/${{ values.namespace }}/${{ values.component_id }}
+  workspaces:
+    - name: source
+    - name: maven-settings
+  tasks:
+    - name: clone
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+        - name: sslVerify
+          value: "false"
+      workspaces:
+        - name: output
+          workspace: source
+
+    - name: build
+      taskRef:
+        kind: ClusterTask
+        name: maven
+      runAfter:
+        - clone
+      params:
+        - name: GOALS
+          value:
+            - package
+            - -DskipTests
+      workspaces:
+        - name: source
+          workspace: source
+        - name: maven-settings
+          workspace: maven-settings
+
+    - name: build-image
+      taskRef:
+        kind: ClusterTask
+        name: buildah
+      runAfter:
+        - build
+      params:
+        - name: IMAGE
+          value: $(params.image)
+        - name: DOCKERFILE
+          value: ./Containerfile
+        - name: TLSVERIFY
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: source
