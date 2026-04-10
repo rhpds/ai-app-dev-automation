@@ -6,6 +6,11 @@ username: user-guid
 password: password
 namespaceSuffix: demo
 
+deployer:
+  domain: apps.cluster-guid.sandbox.opentlc.com
+
+jobAnsibleImage: quay.io/agnosticd/ee-multicloud:latest
+
 gitea:
   image: quay.io/rhpds/gitea
   imageTag: "1.25.5"
