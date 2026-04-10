@@ -1,0 +1,64 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: ai-app-dev
+  title: AI App Dev - Parasol Insurance
+  description: |
+    Scaffolds the Parasol Insurance Quarkus application into a new GitLab
+    repository with a Tekton CI pipeline for building and pushing to the
+    OpenShift internal container registry.
+spec:
+  owner: rhdh
+  type: service
+  parameters:
+    - title: Application Configuration
+      required:
+        - component_id
+      properties:
+        component_id:
+          title: Application Name
+          type: string
+          default: ai-app-dev
+          description: Name of the application and GitLab repository
+  steps:
+    - id: fetch-app
+      name: Fetch Parasol Application Source
+      action: fetch:plain
+      input:
+        url: "https://{{ gitlab_host }}/rhdh/parasol-insurance/-/tree/main"
+
+    - id: overlay
+      name: Apply Catalog and Pipeline Manifests
+      action: fetch:template
+      input:
+        url: ./skeleton
+        targetPath: .
+        replace: true
+        values:
+          component_id: ${{ parameters.component_id }}
+          owner: ${{ user.entity.metadata.name }}
+          namespace: ${{ user.entity.metadata.name }}-demo
+          gitlab_host: "{{ gitlab_host }}"
+
+    - id: publish
+      name: Publish to GitLab
+      action: publish:gitlab
+      input:
+        repoUrl: "{{ gitlab_host }}?owner=${{ user.entity.metadata.name }}&repo=${{ parameters.component_id }}"
+        repoVisibility: public
+        defaultBranch: main
+
+    - id: register
+      name: Register Component in Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  output:
+    links:
+      - title: GitLab Repository
+        url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Open in Catalog
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
