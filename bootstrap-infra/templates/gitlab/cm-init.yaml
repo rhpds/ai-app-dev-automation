@@ -150,6 +150,10 @@ data:
               PRIVATE-TOKEN: '{{ "{{" }} root_token {{ "}}" }}'
             validate_certs: false
             status_code: [201, 400]
+          retries: 5
+          delay: 15
+          register: r_create_{{ .name | replace "-" "_" }}
+          until: r_create_{{ .name | replace "-" "_" }}.status in [201, 400]
 
         - name: Wait for {{ .name }} import to finish
           ansible.builtin.uri:

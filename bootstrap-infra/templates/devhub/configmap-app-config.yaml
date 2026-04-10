@@ -74,3 +74,8 @@ data:
     catalog:
       rules:
         - allow: [Component, System, API, Resource, Location, Template, Domain]
+      locations:
+        - type: url
+          target: https://gitlab-{{ .Values.gitlab.namespace }}.{{ .Values.deployer.domain }}/rhdh/ai-app-dev-automation/-/blob/main/catalog-info.yaml
+          rules:
+            - allow: [Location, Template]
