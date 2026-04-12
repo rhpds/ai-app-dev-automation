@@ -21,8 +21,14 @@ spec:
   tasks:
     - name: clone
       taskRef:
-        kind: ClusterTask
-        name: git-clone
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
       params:
         - name: url
           value: $(params.git-url)
@@ -36,8 +42,14 @@ spec:
 
     - name: build
       taskRef:
-        kind: ClusterTask
-        name: maven
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: maven
+          - name: namespace
+            value: openshift-pipelines
       runAfter:
         - clone
       params:
@@ -45,6 +57,8 @@ spec:
           value:
             - package
             - -DskipTests
+        - name: CONTEXT_DIR
+          value: parasol-insurance
       workspaces:
         - name: source
           workspace: source
@@ -53,15 +67,23 @@ spec:
 
     - name: build-image
       taskRef:
-        kind: ClusterTask
-        name: buildah
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
       runAfter:
         - build
       params:
         - name: IMAGE
           value: $(params.image)
         - name: DOCKERFILE
-          value: ./Containerfile
+          value: ./parasol-insurance/Containerfile
+        - name: CONTEXT
+          value: ./parasol-insurance
         - name: TLSVERIFY
           value: "false"
       workspaces:
