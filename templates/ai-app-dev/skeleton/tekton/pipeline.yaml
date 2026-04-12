@@ -32,11 +32,11 @@ spec:
           - name: namespace
             value: openshift-pipelines
       params:
-        - name: url
+        - name: URL
           value: $(params.git-url)
-        - name: revision
+        - name: REVISION
           value: $(params.git-revision)
-        - name: sslVerify
+        - name: SSL_VERIFY
           value: "false"
       workspaces:
         - name: output
