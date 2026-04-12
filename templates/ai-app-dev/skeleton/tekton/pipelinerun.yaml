@@ -19,5 +19,5 @@ spec:
           resources:
             requests:
               storage: 1Gi
-    - name: maven-settings
+    - name: maven_settings
       emptyDir: {}

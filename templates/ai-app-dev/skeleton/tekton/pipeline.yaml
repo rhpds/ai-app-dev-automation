@@ -19,7 +19,7 @@ spec:
       default: image-registry.openshift-image-registry.svc:5000/${{ values.namespace }}/${{ values.component_id }}
   workspaces:
     - name: source
-    - name: maven-settings
+    - name: maven_settings
   tasks:
     - name: clone
       taskRef:
@@ -59,13 +59,13 @@ spec:
           value:
             - package
             - -DskipTests
-        - name: CONTEXT_DIR
+        - name: SUBDIRECTORY
           value: parasol-insurance
       workspaces:
         - name: source
           workspace: source
-        - name: maven-settings
-          workspace: maven-settings
+        - name: maven_settings
+          workspace: maven_settings
 
     - name: build-image
       taskRef:
