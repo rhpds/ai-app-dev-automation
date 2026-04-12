@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  generateName: ${{ values.component_id }}-build-
+  name: ${{ values.component_id }}-build-run
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   labels:
