@@ -82,14 +82,12 @@ data:
 
   delete-user.yaml: |
     ---
-    - name: Delete GitLab user and catalog entities
+    - name: Delete GitLab user
       hosts: localhost
       vars:
         gitlab_namespace: {{ .Values.gitlab.namespace }}
         gitlab_host: gitlab-{{ .Values.gitlab.namespace }}.{{ .Values.deployer.domain }}
         username: {{ .Values.username }}
-        rhdh_url: https://backstage-developer-hub-{{ .Values.devhub.namespace }}.{{ .Values.deployer.domain }}
-        backend_secret: {{ .Values.devhub.backendSecret }}
       tasks:
         - name: Retrieve root token
           kubernetes.core.k8s_info:
@@ -122,53 +120,3 @@ data:
             validate_certs: false
             status_code: [204, 404]
           when: r_user_info.json | length > 0
-
-        - name: Find catalog entities owned by user
-          ansible.builtin.uri:
-            url: '{{ "{{" }} rhdh_url {{ "}}" }}/api/catalog/entities/by-query?filter=spec.owner=user:{{ "{{" }} username {{ "}}" }}'
-            method: GET
-            headers:
-              Authorization: 'Bearer {{ "{{" }} backend_secret {{ "}}" }}'
-            validate_certs: false
-            status_code: [200]
-          register: r_catalog_entities
-          ignore_errors: true
-
-        - name: Delete catalog entities owned by user
-          ansible.builtin.uri:
-            url: '{{ "{{" }} rhdh_url {{ "}}" }}/api/catalog/entities/by-uid/{{ "{{" }} item.metadata.uid {{ "}}" }}'
-            method: DELETE
-            headers:
-              Authorization: 'Bearer {{ "{{" }} backend_secret {{ "}}" }}'
-            validate_certs: false
-            status_code: [204, 404]
-          loop: '{{ "{{" }} r_catalog_entities.json.items | default([]) {{ "}}" }}'
-          loop_control:
-            label: '{{ "{{" }} item.metadata.name {{ "}}" }}'
-          when: r_catalog_entities is succeeded
-          ignore_errors: true
-
-        - name: Find location entities for user repos
-          ansible.builtin.uri:
-            url: '{{ "{{" }} rhdh_url {{ "}}" }}/api/catalog/entities/by-query?filter=kind=Location,spec.targets=*{{ "{{" }} username {{ "}}" }}*'
-            method: GET
-            headers:
-              Authorization: 'Bearer {{ "{{" }} backend_secret {{ "}}" }}'
-            validate_certs: false
-            status_code: [200]
-          register: r_catalog_locations
-          ignore_errors: true
-
-        - name: Delete location entities for user repos
-          ansible.builtin.uri:
-            url: '{{ "{{" }} rhdh_url {{ "}}" }}/api/catalog/entities/by-uid/{{ "{{" }} item.metadata.uid {{ "}}" }}'
-            method: DELETE
-            headers:
-              Authorization: 'Bearer {{ "{{" }} backend_secret {{ "}}" }}'
-            validate_certs: false
-            status_code: [204, 404]
-          loop: '{{ "{{" }} r_catalog_locations.json.items | default([]) {{ "}}" }}'
-          loop_control:
-            label: '{{ "{{" }} item.metadata.name {{ "}}" }}'
-          when: r_catalog_locations is succeeded
-          ignore_errors: true
