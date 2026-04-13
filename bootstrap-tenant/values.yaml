@@ -14,6 +14,10 @@ jobAnsibleImage: quay.io/agnosticd/ee-multicloud:latest
 gitlab:
   namespace: gitlab
 
+devhub:
+  namespace: rhdh
+  backendSecret: demo-backend-secret-key-change-me
+
 # Set to empty to NOT create Gitea.
 # gitea: ""
 gitea:
