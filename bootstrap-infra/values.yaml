@@ -20,6 +20,7 @@ devhub:
   oauth:
     clientId: backstage
     clientSecret: backstage-client-secret-demo
+  backendSecret: demo-backend-secret-key-change-me
 
 gitlab:
   namespace: gitlab
