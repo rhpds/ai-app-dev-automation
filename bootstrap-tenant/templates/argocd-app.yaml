@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ai-app-dev-pipeline
+  name: ai-app-dev
   namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"
 spec:
   project: default
