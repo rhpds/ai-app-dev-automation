@@ -11,11 +11,6 @@ deployer:
 
 jobAnsibleImage: quay.io/agnosticd/ee-multicloud:latest
 
-deployer:
-  domain: apps.cluster-guid.sandbox.opentlc.com
-
-jobAnsibleImage: quay.io/agnosticd/ee-multicloud:latest
-
 # Set to empty to NOT create Gitea.
 # gitea: ""
 gitea:
