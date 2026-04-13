@@ -8,7 +8,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: gitlab-job-token-reader-{{ .Values.username }}
-  namespace: gitlab
+  namespace: {{ .Values.gitlab.namespace }}
 subjects:
   - kind: ServiceAccount
     name: gitlab-job

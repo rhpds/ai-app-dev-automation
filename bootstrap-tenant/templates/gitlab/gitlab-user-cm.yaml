@@ -9,8 +9,8 @@ data:
     - name: Create GitLab user
       hosts: localhost
       vars:
-        gitlab_namespace: gitlab
-        gitlab_host: gitlab-gitlab.{{ .Values.deployer.domain }}
+        gitlab_namespace: {{ .Values.gitlab.namespace }}
+        gitlab_host: gitlab-{{ .Values.gitlab.namespace }}.{{ .Values.deployer.domain }}
         username: {{ .Values.username }}
         password: {{ .Values.password }}
       tasks:
@@ -85,8 +85,8 @@ data:
     - name: Delete GitLab user
       hosts: localhost
       vars:
-        gitlab_namespace: gitlab
-        gitlab_host: gitlab-gitlab.{{ .Values.deployer.domain }}
+        gitlab_namespace: {{ .Values.gitlab.namespace }}
+        gitlab_host: gitlab-{{ .Values.gitlab.namespace }}.{{ .Values.deployer.domain }}
         username: {{ .Values.username }}
       tasks:
         - name: Retrieve root token
