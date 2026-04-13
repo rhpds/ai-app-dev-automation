@@ -1,0 +1,52 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ${{ values.vm_name }}
+  namespace: ${{ values.namespace }}
+  labels:
+    app: ${{ values.vm_name }}
+    backstage.io/kubernetes-id: ${{ values.component_id }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        app: ${{ values.vm_name }}
+        kubevirt.io/domain: ${{ values.vm_name }}
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        resources:
+          requests:
+            memory: 4Gi
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          containerDisk:
+            # TODO: Replace with the actual RHEL 10 image with Podman Desktop pre-installed
+            image: registry.redhat.io/rhel10/rhel-guest-image:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              user: ${{ values.owner }}
+              password: changeme
+              chpasswd:
+                expire: false
+              # TODO: Add Podman Desktop installation and configuration

@@ -31,8 +31,8 @@ gitlab:
   repos:
     - name: ai-app-dev-automation
       sourceUrl: https://github.com/rhpds/ai-app-dev-automation.git
-    - name: parasol-insurance
-      sourceUrl: https://github.com/redhat-ads-tech/parasol-insurance.git
+    - name: parasol-chat
+      sourceUrl: https://github.com/redhat-ads-tech/parasol-chat.git
 
 jobCliImage: registry.redhat.io/openshift4/ose-cli:latest
 jobAnsibleImage: quay.io/agnosticd/ee-multicloud:latest

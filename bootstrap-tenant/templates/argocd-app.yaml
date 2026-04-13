@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://gitlab-gitlab.{{ .Values.deployer.domain }}/{{ .Values.username }}/ai-app-dev.git
     targetRevision: main
-    path: tekton
+    path: manifests
   destination:
     server: https://kubernetes.default.svc
     namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"

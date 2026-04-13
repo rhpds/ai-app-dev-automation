@@ -55,3 +55,6 @@ data:
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-community-plugin-tekton
         disabled: false
+      # Disable the quickstart plugin to avoid distracting people on initial sign-in
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-quickstart
+        disabled: true

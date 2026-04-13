@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${{ values.component_id }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app: ${{ values.component_id }}
+    backstage.io/kubernetes-id: ${{ values.component_id }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${{ values.component_id }}
+  template:
+    metadata:
+      labels:
+        app: ${{ values.component_id }}
+        backstage.io/kubernetes-id: ${{ values.component_id }}
+    spec:
+      containers:
+        - name: ${{ values.component_id }}
+          image: image-registry.openshift-image-registry.svc:5000/${{ values.namespace }}/${{ values.component_id }}:latest
+          ports:
+            - containerPort: 8501
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: llm-config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8501
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8501
+            initialDelaySeconds: 15
+            periodSeconds: 20

@@ -19,7 +19,6 @@ spec:
       default: image-registry.openshift-image-registry.svc:5000/${{ values.namespace }}/${{ values.component_id }}
   workspaces:
     - name: source
-    - name: maven_settings
   tasks:
     - name: clone
       taskRef:
@@ -42,31 +41,6 @@ spec:
         - name: output
           workspace: source
 
-    - name: build
-      taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: maven
-          - name: namespace
-            value: openshift-pipelines
-      runAfter:
-        - clone
-      params:
-        - name: GOALS
-          value:
-            - package
-            - -DskipTests
-        - name: SUBDIRECTORY
-          value: parasol-insurance
-      workspaces:
-        - name: source
-          workspace: source
-        - name: maven_settings
-          workspace: maven_settings
-
     - name: build-image
       taskRef:
         resolver: cluster
@@ -78,14 +52,14 @@ spec:
           - name: namespace
             value: openshift-pipelines
       runAfter:
-        - build
+        - clone
       params:
         - name: IMAGE
           value: $(params.image)
         - name: DOCKERFILE
-          value: ./parasol-insurance/Containerfile
+          value: ./parasol-chat/Containerfile
         - name: CONTEXT
-          value: ./parasol-insurance
+          value: ./parasol-chat
         - name: TLSVERIFY
           value: "false"
       workspaces:

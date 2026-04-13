@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-gitlab-webhook
+  namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      serviceAccountName: gitlab-job
+      containers:
+        - name: ansible
+          image: {{ .Values.jobAnsibleImage }}
+          command:
+            - /bin/sh
+            - -c
+            - ansible-playbook /playbooks/create-webhook.yaml
+          volumeMounts:
+            - name: playbooks
+              mountPath: /playbooks
+      volumes:
+        - name: playbooks
+          configMap:
+            name: cm-gitlab-webhook
+      restartPolicy: Never
+  backoffLimit: 3
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: delete-gitlab-webhook
+  namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"
+  annotations:
+    argocd.argoproj.io/hook: PreDelete
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      serviceAccountName: gitlab-job
+      containers:
+        - name: ansible
+          image: {{ .Values.jobAnsibleImage }}
+          command:
+            - /bin/sh
+            - -c
+            - ansible-playbook /playbooks/delete-webhook.yaml
+          volumeMounts:
+            - name: playbooks
+              mountPath: /playbooks
+      volumes:
+        - name: playbooks
+          configMap:
+            name: cm-gitlab-webhook
+      restartPolicy: Never
+  backoffLimit: 3

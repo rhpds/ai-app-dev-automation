@@ -2,11 +2,12 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: ai-app-dev
-  title: AI App Dev - Parasol Insurance
+  title: AI App Dev - Parasol Chat
   description: |
-    Scaffolds the Parasol Insurance Quarkus application into a new GitLab
-    repository with a Tekton CI pipeline for building and pushing to the
-    OpenShift internal container registry.
+    Scaffolds the Parasol Chat AI application into a new GitLab repository
+    with a Tekton CI pipeline for building and pushing to the OpenShift
+    internal container registry. Also provisions a RHEL 10 virtual machine
+    with the Red Hat build of Podman Desktop for local AI development.
 spec:
   owner: rhdh
   type: service
@@ -14,19 +15,31 @@ spec:
     - title: Application Configuration
       required:
         - component_id
+        - vm_name
       properties:
         component_id:
           title: Application Name
           type: string
           default: ai-app-dev
           description: Name of the application and GitLab repository
+        vm_name:
+          title: Virtual Machine Name
+          type: string
+          default: developer-workstation
+          description: >-
+            Name for the RHEL 10 developer workstation virtual machine.
+            Must contain only lowercase letters, numbers, and hyphens.
+            Must start and end with an alphanumeric character.
+          pattern: "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
+          maxLength: 253
+          ui:help: "Example: my-dev-vm (lowercase letters, numbers, and hyphens only)"
   steps:
     - id: fetch-app
-      name: Fetch Parasol Application Source
+      name: Fetch Parasol Chat Application Source
       action: fetch:plain
       input:
-        url: "https://{{ gitlab_host }}/rhdh/parasol-insurance/-/tree/main"
-        targetPath: parasol-insurance
+        url: "https://{{ gitlab_host }}/rhdh/parasol-chat/-/tree/main"
+        targetPath: parasol-chat
 
     - id: overlay
       name: Apply Catalog and Pipeline Manifests
@@ -37,9 +50,11 @@ spec:
         replace: true
         values:
           component_id: ${{ parameters.component_id }}
+          vm_name: ${{ parameters.vm_name }}
           owner: ${{ user.entity.metadata.name }}
           namespace: ${{ user.entity.metadata.name }}-demo
           gitlab_host: "{{ gitlab_host }}"
+          cluster_subdomain: "{{ cluster_subdomain }}"
 
     - id: publish
       name: Publish to GitLab

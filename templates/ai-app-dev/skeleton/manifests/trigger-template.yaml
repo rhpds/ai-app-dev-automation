@@ -1,0 +1,37 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: ${{ values.component_id }}-build-template
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    backstage.io/kubernetes-id: ${{ values.component_id }}
+spec:
+  params:
+    - name: git-url
+    - name: git-revision
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: ${{ values.component_id }}-build-
+        labels:
+          backstage.io/kubernetes-id: ${{ values.component_id }}
+          tekton.dev/pipeline: ${{ values.component_id }}-build
+      spec:
+        pipelineRef:
+          name: ${{ values.component_id }}-build
+        params:
+          - name: git-url
+            value: $(tt.params.git-url)
+          - name: git-revision
+            value: $(tt.params.git-revision)
+        workspaces:
+          - name: source
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi

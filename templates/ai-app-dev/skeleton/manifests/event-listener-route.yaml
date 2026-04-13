@@ -1,0 +1,18 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: ${{ values.component_id }}-el
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    backstage.io/kubernetes-id: ${{ values.component_id }}
+spec:
+  to:
+    kind: Service
+    name: el-${{ values.component_id }}-listener
+    weight: 100
+  port:
+    targetPort: http-listener
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

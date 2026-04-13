@@ -14,6 +14,14 @@ jobAnsibleImage: quay.io/agnosticd/ee-multicloud:latest
 gitlab:
   namespace: gitlab
 
+# LLM / Model as a Service configuration
+# These placeholder values will be replaced with actual MaaS endpoint details
+# when the LLM workload is available. Values are passed from the cluster workload.
+llm:
+  endpoint: "http://placeholder-model-endpoint:8001/v1"
+  modelName: "placeholder-model"
+  apiKey: "placeholder-api-key"
+
 devhub:
   namespace: rhdh
   backendSecret: demo-backend-secret-key-change-me
