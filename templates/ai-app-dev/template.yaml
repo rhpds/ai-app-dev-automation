@@ -26,6 +26,7 @@ spec:
       action: fetch:plain
       input:
         url: "https://{{ gitlab_host }}/rhdh/parasol-insurance/-/tree/main"
+        targetPath: parasol-insurance
 
     - id: overlay
       name: Apply Catalog and Pipeline Manifests

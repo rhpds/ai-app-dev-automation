@@ -1,3 +1,4 @@
+{{ if .Values.gitea -}}
 ---
 apiVersion: pfe.rhpds.com/v1
 kind: Gitea
@@ -22,3 +23,4 @@ spec:
   giteaUserEmailDomain: "demo.redhat.com"
   giteaMigrateRepositories: true
   giteaRepositoriesList: {{ toJson .Values.gitea.repositoriesList }}
+{{- end }}

@@ -2,6 +2,8 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: ${{ values.component_id }}-build
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
   labels:
     backstage.io/kubernetes-id: ${{ values.component_id }}
 spec:
@@ -17,18 +19,24 @@ spec:
       default: image-registry.openshift-image-registry.svc:5000/${{ values.namespace }}/${{ values.component_id }}
   workspaces:
     - name: source
-    - name: maven-settings
+    - name: maven_settings
   tasks:
     - name: clone
       taskRef:
-        kind: ClusterTask
-        name: git-clone
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
       params:
-        - name: url
+        - name: URL
           value: $(params.git-url)
-        - name: revision
+        - name: REVISION
           value: $(params.git-revision)
-        - name: sslVerify
+        - name: SSL_VERIFY
           value: "false"
       workspaces:
         - name: output
@@ -36,8 +44,14 @@ spec:
 
     - name: build
       taskRef:
-        kind: ClusterTask
-        name: maven
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: maven
+          - name: namespace
+            value: openshift-pipelines
       runAfter:
         - clone
       params:
@@ -45,23 +59,33 @@ spec:
           value:
             - package
             - -DskipTests
+        - name: SUBDIRECTORY
+          value: parasol-insurance
       workspaces:
         - name: source
           workspace: source
-        - name: maven-settings
-          workspace: maven-settings
+        - name: maven_settings
+          workspace: maven_settings
 
     - name: build-image
       taskRef:
-        kind: ClusterTask
-        name: buildah
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
       runAfter:
         - build
       params:
         - name: IMAGE
           value: $(params.image)
         - name: DOCKERFILE
-          value: ./Containerfile
+          value: ./parasol-insurance/Containerfile
+        - name: CONTEXT
+          value: ./parasol-insurance
         - name: TLSVERIFY
           value: "false"
       workspaces:

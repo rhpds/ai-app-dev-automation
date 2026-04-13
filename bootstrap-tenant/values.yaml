@@ -6,6 +6,16 @@ username: user-guid
 password: password
 namespaceSuffix: demo
 
+deployer:
+  domain: apps.cluster-guid.sandbox.opentlc.com
+
+jobAnsibleImage: quay.io/agnosticd/ee-multicloud:latest
+
+gitlab:
+  namespace: gitlab
+
+# Set to empty to NOT create Gitea.
+# gitea: ""
 gitea:
   image: quay.io/rhpds/gitea
   imageTag: "1.25.5"

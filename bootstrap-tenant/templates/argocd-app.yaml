@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ai-app-dev-pipeline
+  namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab-gitlab.{{ .Values.deployer.domain }}/{{ .Values.username }}/ai-app-dev.git
+    targetRevision: main
+    path: tekton
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: -1
+      backoff:
+        duration: 30s
+        maxDuration: 5m
+        factor: 2
