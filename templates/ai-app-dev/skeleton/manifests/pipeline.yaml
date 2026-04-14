@@ -65,3 +65,15 @@ spec:
       workspaces:
         - name: source
           workspace: source
+
+    - name: restart-rollout
+      runAfter:
+        - build-image
+      taskSpec:
+        steps:
+          - name: rollout-restart
+            image: registry.redhat.io/openshift4/ose-cli:latest
+            script: |
+              #!/bin/sh
+              oc rollout restart deployment/${{ values.component_id }} -n ${{ values.namespace }}
+              oc rollout status deployment/${{ values.component_id }} -n ${{ values.namespace }} --timeout=120s

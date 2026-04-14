@@ -66,6 +66,37 @@ spec:
         repoVisibility: public
         defaultBranch: main
 
+    - id: create-argocd-app
+      name: Create ArgoCD Application
+      action: kubernetes:apply
+      input:
+        namespaced: true
+        manifest: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: Application
+          metadata:
+            name: ${{ parameters.component_id }}
+            namespace: ${{ user.entity.metadata.name }}-demo
+          spec:
+            project: default
+            source:
+              repoURL: https://{{ gitlab_host }}/${{ user.entity.metadata.name }}/${{ parameters.component_id }}.git
+              targetRevision: main
+              path: manifests
+            destination:
+              server: https://kubernetes.default.svc
+              namespace: ${{ user.entity.metadata.name }}-demo
+            syncPolicy:
+              automated:
+                prune: true
+                selfHeal: true
+              retry:
+                limit: -1
+                backoff:
+                  duration: 30s
+                  maxDuration: 5m
+                  factor: 2
+
     - id: register
       name: Register Component in Catalog
       action: catalog:register
