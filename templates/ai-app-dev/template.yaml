@@ -71,7 +71,7 @@ spec:
       action: http:backstage:request
       input:
         method: POST
-        path: /api/proxy/kube/apis/argoproj.io/v1alpha1/namespaces/${{ user.entity.metadata.name }}-demo/applications
+        path: /proxy/kube/apis/argoproj.io/v1alpha1/namespaces/${{ user.entity.metadata.name }}-demo/applications
         headers:
           Content-Type: application/json
         body:
