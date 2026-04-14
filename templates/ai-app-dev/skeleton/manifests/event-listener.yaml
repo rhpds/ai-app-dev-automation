@@ -4,8 +4,6 @@ metadata:
   name: ${{ values.component_id }}-listener
   annotations:
     argocd.argoproj.io/sync-wave: "0"
-  labels:
-    backstage.io/kubernetes-id: ${{ values.component_id }}
 spec:
   serviceAccountName: pipeline
   triggers:

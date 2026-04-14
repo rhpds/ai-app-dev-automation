@@ -4,8 +4,6 @@ metadata:
   name: cm-gitlab-webhook
   annotations:
     argocd.argoproj.io/sync-wave: "1"
-  labels:
-    backstage.io/kubernetes-id: ${{ values.component_id }}
 data:
   create-webhook.yaml: |
     ---

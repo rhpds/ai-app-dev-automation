@@ -6,8 +6,6 @@ metadata:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
     argocd.argoproj.io/sync-wave: "2"
-  labels:
-    backstage.io/kubernetes-id: ${{ values.component_id }}
 spec:
   template:
     spec:
