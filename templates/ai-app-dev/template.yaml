@@ -68,10 +68,13 @@ spec:
 
     - id: create-argocd-app
       name: Create ArgoCD Application
-      action: kubernetes:apply
+      action: http:backstage:request
       input:
-        namespaced: true
-        manifest: |
+        method: POST
+        path: /api/proxy/kube/apis/argoproj.io/v1alpha1/namespaces/${{ user.entity.metadata.name }}-demo/applications
+        headers:
+          Content-Type: application/json
+        body:
           apiVersion: argoproj.io/v1alpha1
           kind: Application
           metadata:

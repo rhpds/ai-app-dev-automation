@@ -57,6 +57,8 @@ data:
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-community-plugin-scaffolder-backend-module-kubernetes-dynamic
         disabled: false
+      - package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-http-request-dynamic
+        disabled: false
       # Disable the quickstart plugin to avoid distracting people on initial sign-in
       - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-quickstart
         disabled: true
