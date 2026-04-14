@@ -15,6 +15,7 @@ data:
         gitlab_host: gitlab-{{ .Values.gitlab.namespace }}.{{ .Values.deployer.domain }}
         root_password: {{ .Values.gitlab.rootPassword }}
         cluster_subdomain: {{ .Values.deployer.domain }}
+        ansible_image: {{ .Values.jobAnsibleImage }}
       tasks:
         - name: Wait for GitLab pod to be ready
           kubernetes.core.k8s_info:
@@ -199,6 +200,10 @@ data:
               value: '{{ "{{" }} gitlab_host {{ "}}" }}'
             - key: cluster_subdomain
               value: '{{ "{{" }} cluster_subdomain {{ "}}" }}'
+            - key: gitlab_namespace
+              value: '{{ "{{" }} gitlab_namespace {{ "}}" }}'
+            - key: ansible_image
+              value: '{{ "{{" }} ansible_image {{ "}}" }}'
 
         - name: Git config email
           ansible.builtin.command:

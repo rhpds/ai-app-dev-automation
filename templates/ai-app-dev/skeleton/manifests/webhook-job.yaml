@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-gitlab-webhook
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    backstage.io/kubernetes-id: ${{ values.component_id }}
+spec:
+  template:
+    spec:
+      serviceAccountName: gitlab-job
+      containers:
+        - name: ansible
+          image: ${{ values.ansible_image }}
+          command:
+            - /bin/sh
+            - -c
+            - ansible-playbook /playbooks/create-webhook.yaml
+          volumeMounts:
+            - name: playbooks
+              mountPath: /playbooks
+      volumes:
+        - name: playbooks
+          configMap:
+            name: cm-gitlab-webhook
+      restartPolicy: Never
+  backoffLimit: 3

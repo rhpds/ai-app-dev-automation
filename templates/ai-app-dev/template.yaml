@@ -54,7 +54,9 @@ spec:
           owner: ${{ user.entity.metadata.name }}
           namespace: ${{ user.entity.metadata.name }}-demo
           gitlab_host: "{{ gitlab_host }}"
+          gitlab_namespace: "{{ gitlab_namespace }}"
           cluster_subdomain: "{{ cluster_subdomain }}"
+          ansible_image: "{{ ansible_image }}"
 
     - id: publish
       name: Publish to GitLab
