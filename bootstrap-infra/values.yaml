@@ -10,6 +10,14 @@ deployer:
   domain: apps.cluster-guid.sandbox.opentlc.com
   apiUrl: https://api.cluster-guid.sandbox.opentlc.com:6443
 
+vm:
+  name: student-vm
+  namespace: openshift-virtualization-os-images
+  sourceUrl: https://s3.us-east-1.amazonaws.com/rhdp-images/lb2862.qcow2
+  sourceAccessKeyId: change-me
+  sourceSecretAccessKey: change-me
+  size: 30Gi
+  storageClass: ocs-external-storagecluster-ceph-rbd-immediate
 
 devhub:
   namespace: rhdh
