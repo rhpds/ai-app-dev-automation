@@ -10,6 +10,18 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   running: true
+  dataVolumeTemplates:
+    - metadata:
+        name: ${{ values.vm_name }}-volume
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: student-vm
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
   template:
     metadata:
       labels:
@@ -18,11 +30,17 @@ spec:
     spec:
       domain:
         cpu:
-          cores: 2
+          cores: 4
         resources:
           requests:
-            memory: 4Gi
+            memory: 8Gi
+          limits:
+            memory: 16Gi
         devices:
+          inputs:
+            - type: tablet
+              bus: virtio
+              name: tablet
           disks:
             - name: rootdisk
               disk:
@@ -31,16 +49,17 @@ spec:
               disk:
                 bus: virtio
           interfaces:
-            - name: default
-              masquerade: {}
+            - masquerade: {}
+              model: virtio
+              name: default
+          rng: {}
       networks:
         - name: default
           pod: {}
       volumes:
         - name: rootdisk
-          containerDisk:
-            # TODO: Replace with the actual RHEL 10 image with Podman Desktop pre-installed
-            image: registry.redhat.io/rhel10/rhel-guest-image:latest
+          dataVolume:
+            name: ${{ values.vm_name }}-volume
         - name: cloudinitdisk
           cloudInitNoCloud:
             userData: |
@@ -49,4 +68,3 @@ spec:
               password: changeme
               chpasswd:
                 expire: false
-              # TODO: Add Podman Desktop installation and configuration
