@@ -41,6 +41,7 @@ data:
                   host: gitlab-{{ .Values.gitlab.namespace }}.{{ .Values.deployer.domain }}
                   branch: main
                   fallbackBranch: main
+                  group: rhdh
                   entityFilename: catalog-info.yaml
                   schedule:
                     frequency:
