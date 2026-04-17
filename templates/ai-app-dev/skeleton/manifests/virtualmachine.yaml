@@ -16,7 +16,7 @@ spec:
       spec:
         sourceRef:
           kind: DataSource
-          name: student-vm
+          name: fedora
           namespace: openshift-virtualization-os-images
         storage:
           resources:
@@ -30,17 +30,13 @@ spec:
     spec:
       domain:
         cpu:
-          cores: 4
+          cores: 1
         resources:
           requests:
-            memory: 8Gi
+            memory: 1Gi
           limits:
-            memory: 16Gi
+            memory: 4Gi
         devices:
-          inputs:
-            - type: tablet
-              bus: virtio
-              name: tablet
           disks:
             - name: rootdisk
               disk:
