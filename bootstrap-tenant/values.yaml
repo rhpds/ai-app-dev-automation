@@ -17,8 +17,6 @@ gitlab:
   namespace: gitlab
 
 # LLM / Model as a Service configuration
-# These placeholder values will be replaced with actual MaaS endpoint details
-# when the LLM workload is available. Values are passed from the cluster workload.
 llm:
   endpoint: "http://placeholder-model-endpoint:8001/v1"
   modelName: "placeholder-model"
@@ -29,13 +27,13 @@ devhub:
   backendSecret: demo-backend-secret-key-change-me
 
 # Set to empty to NOT create Gitea.
-# gitea: ""
-gitea:
-  image: quay.io/rhpds/gitea
-  imageTag: "1.25.5"
-  postgresqlImage: registry.redhat.io/rhel10/postgresql-16
-  postgresqlImageTag: "10.1"
-  repositoriesList:
-    - repo: "https://github.com/rhpds/ai-app-dev-automation"
-      name: "ai-app-dev"
-      private: false
+gitea: ""
+
+# RHEL VM for Podman Desktop — runs on metal nodes (AWS bare metal, no nested virt)
+# Clones from student-vm DataSource in openshift-virtualization-os-images
+# Set enabled: false to skip VM creation
+vm:
+  enabled: true
+  diskSize: 30Gi
+  memory: 8G
+  cores: 4

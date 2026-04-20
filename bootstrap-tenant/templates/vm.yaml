@@ -1,0 +1,82 @@
+{{ if .Values.vm.enabled -}}
+---
+# VirtualMachine — RHEL Podman Desktop
+# Clones disk from student-vm DataSource (imported from S3 by bootstrap-infra)
+# Scheduled on metal nodes (tainted metal=reserved:NoSchedule)
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: rhel-podman
+  namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"
+spec:
+  running: true
+  dataVolumeTemplates:
+  - metadata:
+      name: rhel-podman-disk
+    spec:
+      sourceRef:
+        kind: DataSource
+        name: student-vm
+        namespace: openshift-virtualization-os-images
+      storage:
+        accessModes:
+          - ReadWriteOnce    # AWS EBS — RWX not supported
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: {{ .Values.vm.diskSize }}
+  template:
+    metadata:
+      labels:
+        vm.kubevirt.io/name: rhel-podman
+    spec:
+      tolerations:
+      - key: metal
+        value: reserved
+        effect: NoSchedule   # schedule only on metal nodes
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/worker-metal
+                operator: Exists
+      domain:
+        cpu:
+          cores: {{ .Values.vm.cores }}
+          model: host-passthrough
+        memory:
+          guest: {{ .Values.vm.memory }}
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: rootdisk
+          interfaces:
+          - name: default
+            model: virtio
+            masquerade: {}
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - dataVolume:
+          name: rhel-podman-disk
+        name: rootdisk
+---
+# SSH service for showroom terminal access
+apiVersion: v1
+kind: Service
+metadata:
+  name: rhel-podman-ssh
+  namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"
+spec:
+  selector:
+    vm.kubevirt.io/name: rhel-podman
+  ports:
+  - name: ssh
+    port: 22
+    targetPort: 22
+    protocol: TCP
+  type: ClusterIP
+{{- end }}
