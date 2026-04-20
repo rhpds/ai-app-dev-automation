@@ -1,25 +1,23 @@
 {{ if .Values.vm -}}
 ---
-# ServiceAccount for noVNC proxy
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: novnc
   namespace: "{{ .Values.username }}-vm"
 ---
-# Role — list pods + port-forward to virt-launcher
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: novnc
   namespace: "{{ .Values.username }}-vm"
 rules:
-- apiGroups: [""]
-  resources: ["pods"]
+- apiGroups: ["kubevirt.io"]
+  resources: ["virtualmachines", "virtualmachineinstances"]
   verbs: ["get", "list"]
-- apiGroups: [""]
-  resources: ["pods/portforward"]
-  verbs: ["create", "get"]
+- apiGroups: ["subresources.kubevirt.io"]
+  resources: ["virtualmachineinstances/vnc", "virtualmachines/vnc"]
+  verbs: ["get", "update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -36,8 +34,8 @@ subjects:
   namespace: "{{ .Values.username }}-vm"
 ---
 # noVNC Deployment
-# container 1: kubectl port-forward to virt-launcher pod port 5900 (QEMU VNC)
-# container 2: websockify + noVNC — serves web VNC UI on port 8080
+# Single container: kubectl proxy + Python WebSocket bridge + noVNC UI
+# Proxies VNC via KubeVirt API — no SSO required, works on first click
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -55,49 +53,27 @@ spec:
     spec:
       serviceAccountName: novnc
       containers:
-      - name: portforward
-        image: registry.redhat.io/openshift4/ose-cli:latest
-        command:
-        - /bin/sh
-        - -c
-        - |
-          while true; do
-            POD=$(kubectl get pod -n {{ .Values.username }}-vm \
-              -l vm.kubevirt.io/name=rhel-podman \
-              -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-            if [ -n "$POD" ]; then
-              echo "Forwarding VNC from pod $POD"
-              kubectl port-forward pod/$POD 5900:5900 \
-                -n {{ .Values.username }}-vm \
-                --address 0.0.0.0 || true
-            else
-              echo "Waiting for virt-launcher pod..."
-            fi
-            sleep 5
-          done
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 200m
-            memory: 128Mi
       - name: novnc
-        image: ghcr.io/rhpds/novnc-proxy:v0.1.0
+        image: ghcr.io/rhpds/novnc-proxy:v0.1.1
         ports:
         - containerPort: 8080
+        env:
+        - name: NAMESPACE
+          value: "{{ .Values.username }}-vm"
+        - name: VM_NAME
+          value: rhel-podman
         resources:
           requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 200m
+            cpu: 100m
             memory: 128Mi
+          limits:
+            cpu: 300m
+            memory: 256Mi
         readinessProbe:
           httpGet:
-            path: /
+            path: /vnc.html
             port: 8080
-          initialDelaySeconds: 5
+          initialDelaySeconds: 10
           periodSeconds: 5
 ---
 apiVersion: v1
