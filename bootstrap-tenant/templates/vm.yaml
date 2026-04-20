@@ -49,6 +49,9 @@ spec:
           - disk:
               bus: virtio
             name: rootdisk
+          - disk:
+              bus: virtio
+            name: cloudinit
           interfaces:
           - name: default
             model: virtio
@@ -60,6 +63,15 @@ spec:
       - dataVolume:
           name: rhel-podman-disk
         name: rootdisk
+      - cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: lab-user
+            password: {{ .Values.password }}
+            chpasswd:
+              expire: false
+            ssh_pwauth: true
+        name: cloudinit
 ---
 apiVersion: v1
 kind: Service
