@@ -74,14 +74,9 @@ spec:
             cpu: 200m
             memory: 128Mi
       - name: novnc
-        image: quay.io/rhpds/novnc-proxy:latest
+        image: ghcr.io/rhpds/novnc-proxy:v0.1.0
         ports:
         - containerPort: 8080
-        env:
-        - name: VNC_HOST
-          value: "localhost"
-        - name: VNC_PORT
-          value: "5900"
         resources:
           requests:
             cpu: 50m
