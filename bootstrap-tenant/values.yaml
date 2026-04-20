@@ -39,3 +39,10 @@ gitea:
     - repo: "https://github.com/rhpds/ai-app-dev-automation"
       name: "ai-app-dev"
       private: false
+
+# Set to empty to NOT create RHEL VM.
+# vm: ""
+vm:
+  diskSize: 30Gi
+  memory: 8G
+  cores: 4

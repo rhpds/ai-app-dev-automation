@@ -14,13 +14,22 @@ kind: DataVolume
 metadata:
   name: {{ .Values.vm.name }}
   namespace: {{ .Values.vm.namespace }}
+  annotations:
+    # Required for WaitForFirstConsumer storage classes (AWS EBS gp3-csi).
+    # Without this, CDI and the storage provisioner deadlock waiting for each other.
+    cdi.kubevirt.io/storage.bind.immediate.requested: "true"
 spec:
   source:
     s3:
       url: {{ .Values.vm.sourceUrl }}
       secretRef: {{ .Values.vm.name }}
   storage:
+    {{- if .Values.vm.storageClass }}
     storageClassName: {{ .Values.vm.storageClass }}
+    {{- end }}
+    accessModes:
+      - ReadWriteOnce    # AWS EBS only supports RWO — CNV clusters use RWX with Ceph
+    volumeMode: Filesystem  # EBS CDI import requires Filesystem, not Block
     resources:
       requests:
         storage: {{ .Values.vm.size }}
