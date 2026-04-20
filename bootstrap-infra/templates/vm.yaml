@@ -20,7 +20,12 @@ spec:
       url: {{ .Values.vm.sourceUrl }}
       secretRef: {{ .Values.vm.name }}
   storage:
+    {{- if .Values.vm.storageClass }}
     storageClassName: {{ .Values.vm.storageClass }}
+    {{- end }}
+    accessModes:
+      - ReadWriteOnce    # AWS EBS (gp3-csi) only supports RWO — CNV clusters use RWX with Ceph
+    volumeMode: Filesystem  # EBS CDI import requires Filesystem, not Block
     resources:
       requests:
         storage: {{ .Values.vm.size }}
