@@ -4,7 +4,7 @@ apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
   name: rhel-podman
-  namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"
+  namespace: "{{ .Values.username }}-vm"
 spec:
   runStrategy: Always
   dataVolumeTemplates:
@@ -67,7 +67,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: rhel-podman-ssh
-  namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"
+  namespace: "{{ .Values.username }}-vm"
 spec:
   selector:
     vm.kubevirt.io/name: rhel-podman
