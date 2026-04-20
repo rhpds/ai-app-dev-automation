@@ -1,8 +1,5 @@
-{{ if .Values.vm.enabled -}}
+{{ if .Values.vm -}}
 ---
-# VirtualMachine — RHEL Podman Desktop
-# Clones disk from student-vm DataSource (imported from S3 by bootstrap-infra)
-# Scheduled on metal nodes (tainted metal=reserved:NoSchedule)
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
@@ -20,7 +17,7 @@ spec:
         namespace: openshift-virtualization-os-images
       storage:
         accessModes:
-          - ReadWriteOnce    # AWS EBS — RWX not supported
+          - ReadWriteOnce
         volumeMode: Filesystem
         resources:
           requests:
@@ -33,7 +30,7 @@ spec:
       tolerations:
       - key: metal
         value: reserved
-        effect: NoSchedule   # schedule only on metal nodes
+        effect: NoSchedule
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -64,7 +61,6 @@ spec:
           name: rhel-podman-disk
         name: rootdisk
 ---
-# SSH service for showroom terminal access
 apiVersion: v1
 kind: Service
 metadata:
