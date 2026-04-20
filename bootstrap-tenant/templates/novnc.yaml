@@ -54,7 +54,7 @@ spec:
       serviceAccountName: novnc
       containers:
       - name: novnc
-        image: ghcr.io/rhpds/novnc-proxy:v0.1.1
+        image: ghcr.io/rhpds/novnc-proxy:v0.1.2
         ports:
         - containerPort: 8080
         env:
