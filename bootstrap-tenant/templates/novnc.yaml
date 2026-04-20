@@ -7,19 +7,19 @@ metadata:
   name: novnc
   namespace: "{{ .Values.username }}-vm"
 ---
-# Role — port-forward to VMI for VNC access
+# Role — list pods + port-forward to virt-launcher
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: novnc
   namespace: "{{ .Values.username }}-vm"
 rules:
-- apiGroups: ["kubevirt.io"]
-  resources: ["virtualmachines", "virtualmachineinstances"]
+- apiGroups: [""]
+  resources: ["pods"]
   verbs: ["get", "list"]
-- apiGroups: ["subresources.kubevirt.io"]
-  resources: ["virtualmachineinstances/portforward"]
-  verbs: ["get", "create"]
+- apiGroups: [""]
+  resources: ["pods/portforward"]
+  verbs: ["create", "get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -36,7 +36,7 @@ subjects:
   namespace: "{{ .Values.username }}-vm"
 ---
 # noVNC Deployment
-# container 1: oc port-forward — tunnels VMI VNC port to localhost:5900
+# container 1: kubectl port-forward to virt-launcher pod port 5900 (QEMU VNC)
 # container 2: websockify + noVNC — serves web VNC UI on port 8080
 apiVersion: apps/v1
 kind: Deployment
@@ -62,9 +62,18 @@ spec:
         - -c
         - |
           while true; do
-            oc port-forward vmi/rhel-podman 5900:5900 \
-              -n {{ .Values.username }}-vm \
-              --address 0.0.0.0 || sleep 5
+            POD=$(kubectl get pod -n {{ .Values.username }}-vm \
+              -l vm.kubevirt.io/name=rhel-podman \
+              -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+            if [ -n "$POD" ]; then
+              echo "Forwarding VNC from pod $POD"
+              kubectl port-forward pod/$POD 5900:5900 \
+                -n {{ .Values.username }}-vm \
+                --address 0.0.0.0 || true
+            else
+              echo "Waiting for virt-launcher pod..."
+            fi
+            sleep 5
           done
         resources:
           requests:
