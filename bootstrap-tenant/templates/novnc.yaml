@@ -1,0 +1,126 @@
+{{ if .Values.vm -}}
+---
+# ServiceAccount for noVNC proxy
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: novnc
+  namespace: "{{ .Values.username }}-vm"
+---
+# Role — port-forward to VMI for VNC access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: novnc
+  namespace: "{{ .Values.username }}-vm"
+rules:
+- apiGroups: ["kubevirt.io"]
+  resources: ["virtualmachines", "virtualmachineinstances"]
+  verbs: ["get", "list"]
+- apiGroups: ["subresources.kubevirt.io"]
+  resources: ["virtualmachineinstances/portforward"]
+  verbs: ["get", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: novnc
+  namespace: "{{ .Values.username }}-vm"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: novnc
+subjects:
+- kind: ServiceAccount
+  name: novnc
+  namespace: "{{ .Values.username }}-vm"
+---
+# noVNC Deployment
+# container 1: oc port-forward — tunnels VMI VNC port to localhost:5900
+# container 2: websockify + noVNC — serves web VNC UI on port 8080
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: novnc
+  namespace: "{{ .Values.username }}-vm"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: novnc
+  template:
+    metadata:
+      labels:
+        app: novnc
+    spec:
+      serviceAccountName: novnc
+      containers:
+      - name: portforward
+        image: registry.redhat.io/openshift4/ose-cli:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          while true; do
+            oc port-forward vmi/rhel-podman 5900:5900 \
+              -n {{ .Values.username }}-vm \
+              --address 0.0.0.0 || sleep 5
+          done
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+      - name: novnc
+        image: quay.io/rhpds/novnc-proxy:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: VNC_HOST
+          value: "localhost"
+        - name: VNC_PORT
+          value: "5900"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: novnc
+  namespace: "{{ .Values.username }}-vm"
+spec:
+  selector:
+    app: novnc
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: novnc
+  namespace: "{{ .Values.username }}-vm"
+spec:
+  to:
+    kind: Service
+    name: novnc
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+{{- end }}
