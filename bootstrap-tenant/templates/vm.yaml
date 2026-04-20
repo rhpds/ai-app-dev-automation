@@ -6,10 +6,12 @@ metadata:
   name: rhel-podman
   namespace: "{{ .Values.username }}-{{ .Values.namespaceSuffix }}"
 spec:
-  running: true
+  runStrategy: Always
   dataVolumeTemplates:
   - metadata:
       name: rhel-podman-disk
+      annotations:
+        cdi.kubevirt.io/storage.bind.immediate.requested: "true"
     spec:
       sourceRef:
         kind: DataSource
@@ -66,9 +68,9 @@ spec:
       - cloudInitNoCloud:
           userData: |
             #cloud-config
-            user: lab-user
-            password: {{ .Values.password }}
             chpasswd:
+              list: |
+                labuser:{{ .Values.password }}
               expire: false
             ssh_pwauth: true
         name: cloudinit
