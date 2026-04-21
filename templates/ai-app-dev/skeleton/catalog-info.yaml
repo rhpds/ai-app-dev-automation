@@ -10,8 +10,8 @@ metadata:
     - url: https://console-openshift-console.${{ values.cluster_subdomain }}/k8s/ns/${{ values.namespace }}/kubevirt.io~v1~VirtualMachine/${{ values.vm_name }}
       title: Virtual Machine
       icon: web
-    - url: https://red.ht/rh-summit-2026-lb2862-vm
-      title: Lab VNC Console Access
+    - url: https://console-openshift-console.${{ values.cluster_subdomain }}/k8s/ns/${{ values.namespace }}/kubevirt.io~v1~VirtualMachine/${{ values.vm_name }}/console/standalone
+      title: VNC Console
       icon: web
 spec:
   type: service
