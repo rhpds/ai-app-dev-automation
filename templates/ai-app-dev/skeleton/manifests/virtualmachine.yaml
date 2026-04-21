@@ -9,16 +9,21 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
-  running: true
+  runStrategy: Always
   dataVolumeTemplates:
     - metadata:
-        name: ${{ values.vm_name }}-volume
+        name: ${{ values.vm_name }}-disk
+        annotations:
+          cdi.kubevirt.io/storage.bind.immediate.requested: "true"
       spec:
         sourceRef:
           kind: DataSource
-          name: fedora
+          name: student-vm
           namespace: openshift-virtualization-os-images
         storage:
+          accessModes:
+            - ReadWriteOnce
+          volumeMode: Filesystem
           resources:
             requests:
               storage: 30Gi
@@ -26,16 +31,25 @@ spec:
     metadata:
       labels:
         app: ${{ values.vm_name }}
-        kubevirt.io/domain: ${{ values.vm_name }}
+        vm.kubevirt.io/name: ${{ values.vm_name }}
     spec:
+      tolerations:
+        - key: metal
+          value: reserved
+          effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/worker-metal
+                    operator: Exists
       domain:
         cpu:
-          cores: 1
-        resources:
-          requests:
-            memory: 1Gi
-          limits:
-            memory: 4Gi
+          cores: 4
+          model: host-passthrough
+        memory:
+          guest: 8G
         devices:
           disks:
             - name: rootdisk
@@ -45,25 +59,42 @@ spec:
               disk:
                 bus: virtio
           interfaces:
-            - masquerade: {}
+            - name: default
               model: virtio
-              name: default
-          rng: {}
+              masquerade: {}
       networks:
         - name: default
           pod: {}
       volumes:
         - name: rootdisk
           dataVolume:
-            name: ${{ values.vm_name }}-volume
+            name: ${{ values.vm_name }}-disk
         - name: cloudinitdisk
           cloudInitNoCloud:
             userData: |
               #cloud-config
-              user: ${{ values.owner }}
-              password: changeme
-              chpasswd:
-                expire: false
               runcmd:
                 - nmcli connection add type ethernet con-name eth0 ifname enp1s0 ipv4.method auto
                 - nmcli connection up eth0
+              write_files:
+                - path: /home/labuser/.config/Code/User/settings.json
+                  owner: labuser:labuser
+                  permissions: '0644'
+                  content: |
+                    {
+                        "files.autoSave": "afterDelay",
+                        "files.autoSaveDelay": 1000,
+                        "workbench.startupEditor": "none",
+                        "workbench.tips.enabled": false,
+                        "security.workspace.trust.enabled": false,
+                        "workbench.welcomePage.walkthroughs.openOnInstall": false,
+                        "github.copilot.enable": false,
+                        "chat.disableAIFeatures": true
+                    }
+                - path: /home/labuser/.gitconfig
+                  owner: labuser:labuser
+                  permissions: '0644'
+                  content: |
+                    [user]
+                        name = labuser
+                        email = labuser@parasol-insurance.com
