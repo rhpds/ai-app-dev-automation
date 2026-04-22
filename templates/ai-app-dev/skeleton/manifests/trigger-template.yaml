@@ -19,6 +19,11 @@ spec:
       spec:
         pipelineRef:
           name: ${{ values.component_id }}-build
+        taskRunTemplate:
+          podTemplate:
+            metadata:
+              labels:
+                backstage.io/kubernetes-id: ${{ values.component_id }}
         params:
           - name: git-url
             value: $(tt.params.git-url)
