@@ -51,6 +51,10 @@ spec:
         memory:
           guest: 8G
         devices:
+          inputs:
+            - type: tablet
+              bus: virtio
+              name: tablet
           disks:
             - name: rootdisk
               disk:
@@ -89,7 +93,8 @@ spec:
                         "security.workspace.trust.enabled": false,
                         "workbench.welcomePage.walkthroughs.openOnInstall": false,
                         "github.copilot.enable": false,
-                        "chat.disableAIFeatures": true
+                        "chat.disableAIFeatures": true,
+                        "editor.wordWrap": "on"
                     }
                 - path: /home/labuser/.gitconfig
                   owner: labuser:labuser
